@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Kanban Board 3</title>
+<title>Kanban Board 4</title>
 <style>
     body {
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -57,12 +57,26 @@
         position: relative;
     }
 
+    .task span {
+        flex-grow: 1;
+    }
+
     .task-timestamp {
         font-size: 0.8rem;
         color: #6c757d;
         position: absolute;
         bottom: 5px;
         right: 5px;
+    }
+
+    .task button {
+        background-color: #dc3545;
+        color: #fff;
+        border: none;
+        border-radius: 3px;
+        padding: 5px 10px;
+        cursor: pointer;
+        margin-left: 10px;
     }
 
     input[type="text"] {
