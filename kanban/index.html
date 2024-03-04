@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Task Planner 3</title>
+    <title>Task Planner 4</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -70,6 +70,13 @@
             color: #f00;
             cursor: pointer;
         }
+        .timestamp {
+            font-size: 12px;
+            color: #888;
+            position: absolute;
+            bottom: 5px;
+            right: 5px;
+        }
     </style>
 </head>
 <body>
@@ -105,6 +112,7 @@
                 const db = event.target.result;
                 const objectStore = db.createObjectStore('tasks', { keyPath: 'id' });
                 objectStore.createIndex('completed', 'completed', { unique: false });
+                objectStore.createIndex('timestamp', 'timestamp', { unique: false });
             };
 
             addBtn.addEventListener('click', addTask);
@@ -117,7 +125,8 @@
                     const task = {
                         id: Date.now(),
                         text: taskText,
-                        completed: false
+                        completed: false,
+                        timestamp: new Date().toLocaleString('de-DE')
                     };
                     const request = objectStore.add(task);
                     request.onsuccess = function(event) {
@@ -150,6 +159,10 @@
                     taskItem.classList.add('completed');
                 }
 
+                const timestamp = document.createElement('span');
+                timestamp.textContent = task.timestamp;
+                timestamp.classList.add('timestamp');
+
                 const deleteBtn = document.createElement('button');
                 deleteBtn.textContent = '❌';
                 deleteBtn.classList.add('deleteBtn');
@@ -157,6 +170,7 @@
                     deleteTask(task.id);
                 });
 
+                taskItem.appendChild(timestamp);
                 taskItem.appendChild(deleteBtn);
                 taskItem.addEventListener('click', () => {
                     toggleTask(task);
