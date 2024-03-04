@@ -14,24 +14,15 @@
     }
     .container {
         display: flex;
-        flex-direction: column;
-        align-items: center;
         padding: 20px;
     }
-    .menu {
-        display: flex;
-        justify-content: space-between;
-        width: 100%;
-        margin-bottom: 20px;
-    }
     .column {
+        flex: 1;
         background-color: #fff;
         border-radius: 5px;
         box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
-        width: 300px;
         padding: 10px;
-        margin-bottom: 20px;
-        position: relative;
+        margin: 0 10px;
     }
     .column header {
         display: flex;
@@ -92,34 +83,18 @@
             <h2>Todo</h2>
             <i class="fas fa-plus" onclick="openModal('todo')"></i>
         </header>
-        <div class="card" draggable="true">
-            Task 1
-            <i class="fas fa-trash-alt delete-icon" onclick="deleteItem(this)"></i>
-        </div>
-        <div class="card" draggable="true">
-            Task 2
-            <i class="fas fa-trash-alt delete-icon" onclick="deleteItem(this)"></i>
-        </div>
     </div>
     <div class="column" id="in-progress">
         <header>
             <h2>In Progress</h2>
             <i class="fas fa-plus" onclick="openModal('in-progress')"></i>
         </header>
-        <div class="card" draggable="true">
-            Task 3
-            <i class="fas fa-trash-alt delete-icon" onclick="deleteItem(this)"></i>
-        </div>
     </div>
     <div class="column" id="done">
         <header>
             <h2>Done</h2>
             <i class="fas fa-plus" onclick="openModal('done')"></i>
         </header>
-        <div class="card" draggable="true">
-            Task 4
-            <i class="fas fa-trash-alt delete-icon" onclick="deleteItem(this)"></i>
-        </div>
     </div>
 </div>
 
@@ -132,27 +107,6 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.14.0/Sortable.min.js"></script>
 <script>
-    const containers = document.querySelectorAll('.column');
-
-    containers.forEach(container => {
-        new Sortable(container, {
-            group: 'shared',
-            animation: 150,
-            onAdd: function (evt) {
-                console.log('onAdd', evt.item);
-            },
-            onUpdate: function (evt) {
-                console.log('onUpdate', evt.item);
-            },
-            onRemove: function (evt) {
-                console.log('onRemove', evt.item);
-            },
-            onSort: function (evt) {
-                console.log('onSort', evt.item);
-            }
-        });
-    });
-
     function openModal(columnId) {
         document.getElementById('myModal').style.display = 'flex';
         document.getElementById('myModal').dataset.columnId = columnId;
