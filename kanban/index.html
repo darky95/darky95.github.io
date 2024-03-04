@@ -21,16 +21,17 @@
 
     .board {
         display: flex;
-        flex-grow: 1;
+        flex-wrap: wrap;
     }
 
     .column {
-        flex-grow: 1;
+        flex-basis: calc(20% - 20px);
         border: 1px solid #dee2e6;
         border-radius: 5px;
         margin: 10px;
         padding: 20px;
-        min-width: 300px;
+        max-height: calc(100vh - 40px);
+        overflow-y: auto;
         background-color: #fff;
         box-shadow: 0 0 10px rgba(0,0,0,0.1);
     }
@@ -62,10 +63,10 @@
     }
 
     .task-timestamp {
-        font-size: 0.8rem;
+        font-size: 0.5rem;
         color: #6c757d;
         position: absolute;
-        bottom: 5px;
+        bottom: 2px;
         left: 5px;
     }
 
