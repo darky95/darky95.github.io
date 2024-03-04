@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="de">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Task Planner 4</title>
+    <title>Aufgabenplaner 5</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -23,7 +23,7 @@
             text-align: center;
         }
         #taskInput {
-            width: calc(100% - 20px);
+            width: calc(70% - 20px);
             padding: 10px;
             margin-bottom: 10px;
             border: none;
@@ -32,7 +32,7 @@
             box-sizing: border-box;
         }
         #addBtn {
-            width: 100%;
+            width: calc(30% - 20px);
             padding: 10px;
             margin-bottom: 10px;
             background-color: #007bff;
@@ -75,15 +75,15 @@
             color: #888;
             position: absolute;
             bottom: 5px;
-            right: 5px;
+            right: 40px;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Task Planner</h1>
-        <input type="text" id="taskInput" placeholder="Enter task...">
-        <button id="addBtn">Add Task</button>
+        <h1>Aufgabenplaner</h1>
+        <input type="text" id="taskInput" placeholder="Aufgabe eingeben...">
+        <button id="addBtn">Hinzufügen</button>
         <ul id="taskList"></ul>
     </div>
 
@@ -94,21 +94,21 @@
             const taskList = document.getElementById('taskList');
             let db;
 
-            // Open IndexedDB database
+            // IndexedDB-Datenbank öffnen
             const request = window.indexedDB.open('tasksDB', 1);
 
             request.onerror = function(event) {
-                console.error('Database error:', event.target.errorCode);
+                console.error('Datenbankfehler:', event.target.errorCode);
             };
 
             request.onsuccess = function(event) {
-                console.log('Database opened successfully');
+                console.log('Datenbank erfolgreich geöffnet');
                 db = event.target.result;
                 renderTasks();
             };
 
             request.onupgradeneeded = function(event) {
-                console.log('Database upgrade needed');
+                console.log('Datenbank-Upgrade erforderlich');
                 const db = event.target.result;
                 const objectStore = db.createObjectStore('tasks', { keyPath: 'id' });
                 objectStore.createIndex('completed', 'completed', { unique: false });
@@ -130,7 +130,7 @@
                     };
                     const request = objectStore.add(task);
                     request.onsuccess = function(event) {
-                        console.log('Task added successfully');
+                        console.log('Aufgabe erfolgreich hinzugefügt');
                         renderTask(task);
                     };
                     taskInput.value = '';
@@ -198,7 +198,7 @@
                 const objectStore = transaction.objectStore('tasks');
                 const request = objectStore.delete(id);
                 request.onsuccess = function(event) {
-                    console.log('Task deleted successfully');
+                    console.log('Aufgabe erfolgreich gelöscht');
                     renderTasks();
                 };
             }
