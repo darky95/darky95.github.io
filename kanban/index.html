@@ -105,8 +105,8 @@
 </head>
 <body>
 <div class="input-container">
-    <input type="text" id="task-input" placeholder="Enter a new task">
-    <button onclick="addTask()">Add Task</button>
+    <input type="text" id="task-input" placeholder="Aufgabe eingeben ...">
+    <button onclick="addTask()">Hinzufügen</button>
 </div>
 
 <div class="board-container">
@@ -226,7 +226,7 @@
         taskElement.innerHTML = `
             <span>${task.title}</span>
             <span class="task-timestamp">${new Date(task.timestamp).toLocaleString()}</span>
-            <button onclick="deleteTask(${task.id})">Delete</button>
+            <button onclick="deleteTask(${task.id})">löschen</button>
         `;
         return taskElement;
     }
