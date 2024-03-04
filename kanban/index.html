@@ -77,20 +77,20 @@
     <input type="file" id="fileInput" style="display: none;" onchange="importTasks(event)">
 </div>
 
-<div class="container" ondrop="drop(event)" ondragover="allowDrop(event)">
-    <div class="column" id="todo">
+<div class="container">
+    <div class="column" id="todo" ondrop="drop(event)" ondragover="allowDrop(event)">
         <header>
             <h2>Todo</h2>
             <i class="fas fa-plus" onclick="openModal('todo')"></i>
         </header>
     </div>
-    <div class="column" id="in-progress">
+    <div class="column" id="in-progress" ondrop="drop(event)" ondragover="allowDrop(event)">
         <header>
             <h2>In Progress</h2>
             <i class="fas fa-plus" onclick="openModal('in-progress')"></i>
         </header>
     </div>
-    <div class="column" id="done">
+    <div class="column" id="done" ondrop="drop(event)" ondragover="allowDrop(event)">
         <header>
             <h2>Done</h2>
             <i class="fas fa-plus" onclick="openModal('done')"></i>
