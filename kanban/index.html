@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kanban Board</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        height: 100vh;
+        margin: 0;
+    }
+    .board {
+        display: flex;
+    }
+    .column {
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        margin: 10px;
+        padding: 10px;
+        min-width: 200px;
+        background-color: #f9f9f9;
+    }
+    .task {
+        background-color: #fff;
+        border: 1px solid #ddd;
+        border-radius: 3px;
+        padding: 5px;
+        margin: 5px 0;
+        cursor: pointer;
+    }
+</style>
+</head>
+<body>
+<div class="board">
+    <div id="todo" class="column" ondrop="drop(event)" ondragover="allowDrop(event)">
+        <h2>Todo</h2>
+        <div id="todo-tasks" class="tasks"></div>
+        <input type="text" id="todo-input">
+        <button onclick="addTask('todo')">Add Task</button>
+    </div>
+    <div id="in-progress" class="column" ondrop="drop(event)" ondragover="allowDrop(event)">
+        <h2>In Progress</h2>
+        <div id="in-progress-tasks" class="tasks"></div>
+        <input type="text" id="in-progress-input">
+        <button onclick="addTask('in-progress')">Add Task</button>
+    </div>
+    <div id="done" class="column" ondrop="drop(event)" ondragover="allowDrop(event)">
+        <h2>Done</h2>
+        <div id="done-tasks" class="tasks"></div>
+        <input type="text" id="done-input">
+        <button onclick="addTask('done')">Add Task</button>
+    </div>
+</div>
+
+<script>
+    const DB_NAME = "kanbanDB";
+    const DB_VERSION = 1;
+    let db;
+
+    function initDB() {
+        const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+        request.onerror = function(event) {
+            console.error("Database error: " + event.target.errorCode);
+        };
+
+        request.onupgradeneeded = function(event) {
+            db = event.target.result;
+            const objectStore = db.createObjectStore("tasks", { keyPath: "id", autoIncrement: true });
+            objectStore.createIndex("title", "title", { unique: false });
+        };
+
+        request.onsuccess = function(event) {
+            db = event.target.result;
+            loadTasks();
+        };
+    }
+
+    function addTask(column) {
+        const input = document.getElementById(`${column}-input`);
+        const title = input.value.trim();
+        if (title === "") return;
+
+        const transaction = db.transaction("tasks", "readwrite");
+        const objectStore = transaction.objectStore("tasks");
+        const task = { title, column };
+        
+        const request = objectStore.add(task);
+        
+        request.onsuccess = function(event) {
+            loadTasks();
+            input.value = "";
+        };
+
+        request.onerror = function(event) {
+            console.error("Error adding task");
+        };
+    }
+
+    function loadTasks() {
+        const transaction = db.transaction("tasks", "readonly");
+        const objectStore = transaction.objectStore("tasks");
+        const todoTasks = document.getElementById('todo-tasks');
+        const inProgressTasks = document.getElementById('in-progress-tasks');
+        const doneTasks = document.getElementById('done-tasks');
+
+        todoTasks.innerHTML = "";
+        inProgressTasks.innerHTML = "";
+        doneTasks.innerHTML = "";
+
+        objectStore.openCursor().onsuccess = function(event) {
+            const cursor = event.target.result;
+            if (cursor) {
+                const task = cursor.value;
+                const taskElement = createTaskElement(task);
+                if (task.column === "todo") {
+                    todoTasks.appendChild(taskElement);
+                } else if (task.column === "in-progress") {
+                    inProgressTasks.appendChild(taskElement);
+                } else if (task.column === "done") {
+                    doneTasks.appendChild(taskElement);
+                }
+                cursor.continue();
+            }
+        };
+    }
+
+    function createTaskElement(task) {
+        const taskElement = document.createElement('div');
+        taskElement.classList.add('task');
+        taskElement.draggable = true;
+        taskElement.setAttribute('data-id', task.id);
+        taskElement.setAttribute('ondragstart', 'drag(event)');
+        taskElement.textContent = task.title;
+        return taskElement;
+    }
+
+    function allowDrop(ev) {
+        ev.preventDefault();
+    }
+
+    function drag(ev) {
+        ev.dataTransfer.setData("text", ev.target.getAttribute('data-id'));
+    }
+
+    function drop(ev) {
+        ev.preventDefault();
+        const data = ev.dataTransfer.getData("text");
+        const taskId = parseInt(data);
+        const taskElement = document.querySelector(`[data-id='${taskId}']`);
+        const sourceColumnId = taskElement.parentElement.id;
+        const destinationColumnId = ev.target.parentElement.id;
+        
+        if (sourceColumnId !== destinationColumnId) {
+            moveTask(taskId, destinationColumnId);
+            ev.target.appendChild(taskElement);
+        }
+    }
+
+    function moveTask(taskId, column) {
+        const transaction = db.transaction("tasks", "readwrite");
+        const objectStore = transaction.objectStore("tasks");
+        const request = objectStore.get(taskId);
+
+        request.onsuccess = function(event) {
+            const task = event.target.result;
+            task.column = column;
+            const updateRequest = objectStore.put(task);
+            updateRequest.onerror = function(event) {
+                console.error("Error updating task");
+            };
+            loadTasks();
+        };
+
+        request.onerror = function(event) {
+            console.error("Error getting task");
+        };
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        initDB();
+    });
+</script>
+</body>
+</html>
