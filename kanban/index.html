@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Kanban Board 4</title>
+<title>Kanban Board</title>
 <style>
     body {
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -62,11 +62,11 @@
     }
 
     .task-timestamp {
-        font-size: 0.5rem;
+        font-size: 0.8rem;
         color: #6c757d;
         position: absolute;
-        bottom: 2px;
-        left: 2px;
+        bottom: 5px;
+        left: 5px;
     }
 
     .task button {
@@ -110,16 +110,24 @@
 
 <div class="board-container">
     <div class="board">
-        <div id="todo" class="column" ondrop="drop(event, 'todo')" ondragover="allowDrop(event)">
-            <h2>Todo</h2>
-            <div id="todo-tasks" class="tasks"></div>
+        <div id="open" class="column" ondrop="drop(event, 'open')" ondragover="allowDrop(event)">
+            <h2>Offen</h2>
+            <div id="open-tasks" class="tasks"></div>
+        </div>
+        <div id="to-answer" class="column" ondrop="drop(event, 'to-answer')" ondragover="allowDrop(event)">
+            <h2>Zu beantworten</h2>
+            <div id="to-answer-tasks" class="tasks"></div>
+        </div>
+        <div id="waiting-for-answer" class="column" ondrop="drop(event, 'waiting-for-answer')" ondragover="allowDrop(event)">
+            <h2>Warten auf Antwort</h2>
+            <div id="waiting-for-answer-tasks" class="tasks"></div>
         </div>
         <div id="in-progress" class="column" ondrop="drop(event, 'in-progress')" ondragover="allowDrop(event)">
-            <h2>In Progress</h2>
+            <h2>In Bearbeitung</h2>
             <div id="in-progress-tasks" class="tasks"></div>
         </div>
         <div id="done" class="column" ondrop="drop(event, 'done')" ondragover="allowDrop(event)">
-            <h2>Done</h2>
+            <h2>Abgeschlossen</h2>
             <div id="done-tasks" class="tasks"></div>
         </div>
     </div>
@@ -158,7 +166,7 @@
 
         const transaction = db.transaction("tasks", "readwrite");
         const objectStore = transaction.objectStore("tasks");
-        const task = { title, column: "todo", timestamp: Date.now() };
+        const task = { title, column: "open", timestamp: Date.now() };
         
         const request = objectStore.add(task);
         
@@ -175,11 +183,15 @@
     function loadTasks() {
         const transaction = db.transaction("tasks", "readonly");
         const objectStore = transaction.objectStore("tasks");
-        const todoTasks = document.getElementById('todo-tasks');
+        const openTasks = document.getElementById('open-tasks');
+        const toAnswerTasks = document.getElementById('to-answer-tasks');
+        const waitingForAnswerTasks = document.getElementById('waiting-for-answer-tasks');
         const inProgressTasks = document.getElementById('in-progress-tasks');
         const doneTasks = document.getElementById('done-tasks');
 
-        todoTasks.innerHTML = "";
+        openTasks.innerHTML = "";
+        toAnswerTasks.innerHTML = "";
+        waitingForAnswerTasks.innerHTML = "";
         inProgressTasks.innerHTML = "";
         doneTasks.innerHTML = "";
 
@@ -188,8 +200,12 @@
             if (cursor) {
                 const task = cursor.value;
                 const taskElement = createTaskElement(task);
-                if (task.column === "todo") {
-                    todoTasks.appendChild(taskElement);
+                if (task.column === "open") {
+                    openTasks.appendChild(taskElement);
+                } else if (task.column === "to-answer") {
+                    toAnswerTasks.appendChild(taskElement);
+                } else if (task.column === "waiting-for-answer") {
+                    waitingForAnswerTasks.appendChild(taskElement);
                 } else if (task.column === "in-progress") {
                     inProgressTasks.appendChild(taskElement);
                 } else if (task.column === "done") {
