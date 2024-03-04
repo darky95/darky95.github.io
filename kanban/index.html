@@ -285,6 +285,12 @@
             console.error("Error deleting task");
         };
     }
+    
+    function handleKeyPress(event) {
+        if (event.key === "Enter") {
+            addTask();
+        }
+    }
 
     document.addEventListener("DOMContentLoaded", function() {
         initDB();
