@@ -3,56 +3,103 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Kanban Board</title>
+<title>Kanban Board 2</title>
 <style>
     body {
-        font-family: Arial, sans-serif;
-        display: flex;
-        justify-content: center;
-        align-items: flex-start;
-        height: 100vh;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #f8f9fa;
         margin: 0;
+        padding: 20px;
     }
+
     .board {
         display: flex;
     }
+
     .column {
-        border: 1px solid #ccc;
+        border: 1px solid #dee2e6;
         border-radius: 5px;
         margin: 10px;
         padding: 10px;
-        min-width: 200px;
-        background-color: #f9f9f9;
-    }
-    .task {
+        min-width: 300px;
         background-color: #fff;
-        border: 1px solid #ddd;
-        border-radius: 3px;
-        padding: 5px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    .column h2 {
+        font-size: 1.2rem;
+        margin-bottom: 10px;
+    }
+
+    .tasks {
+        min-height: 100px;
+    }
+
+    .task {
+        background-color: #f1f3f5;
+        border: 1px solid #ced4da;
+        border-radius: 5px;
+        padding: 10px;
         margin: 5px 0;
         cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .task:hover {
+        background-color: #e9ecef;
+    }
+
+    .task button {
+        background-color: #dc3545;
+        color: #fff;
+        border: none;
+        border-radius: 3px;
+        padding: 5px 10px;
+        cursor: pointer;
+    }
+
+    input[type="text"] {
+        width: calc(100% - 80px);
+        padding: 8px;
+        margin-right: 10px;
+        border: 1px solid #ced4da;
+        border-radius: 5px;
+        font-size: 1rem;
+    }
+
+    button {
+        background-color: #007bff;
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+        padding: 10px 20px;
+        cursor: pointer;
+    }
+
+    button:hover {
+        background-color: #0056b3;
     }
 </style>
 </head>
 <body>
 <div class="board">
-    <div id="todo" class="column" ondrop="drop(event)" ondragover="allowDrop(event)">
+    <div id="todo" class="column" ondrop="drop(event, 'todo')" ondragover="allowDrop(event)">
         <h2>Todo</h2>
         <div id="todo-tasks" class="tasks"></div>
-        <input type="text" id="todo-input">
-        <button onclick="addTask('todo')">Add Task</button>
+        <div>
+            <input type="text" id="task-input" placeholder="Enter a new task">
+            <button onclick="addTask()">Add Task</button>
+        </div>
     </div>
-    <div id="in-progress" class="column" ondrop="drop(event)" ondragover="allowDrop(event)">
+    <div id="in-progress" class="column" ondrop="drop(event, 'in-progress')" ondragover="allowDrop(event)">
         <h2>In Progress</h2>
         <div id="in-progress-tasks" class="tasks"></div>
-        <input type="text" id="in-progress-input">
-        <button onclick="addTask('in-progress')">Add Task</button>
     </div>
-    <div id="done" class="column" ondrop="drop(event)" ondragover="allowDrop(event)">
+    <div id="done" class="column" ondrop="drop(event, 'done')" ondragover="allowDrop(event)">
         <h2>Done</h2>
         <div id="done-tasks" class="tasks"></div>
-        <input type="text" id="done-input">
-        <button onclick="addTask('done')">Add Task</button>
     </div>
 </div>
 
@@ -72,6 +119,8 @@
             db = event.target.result;
             const objectStore = db.createObjectStore("tasks", { keyPath: "id", autoIncrement: true });
             objectStore.createIndex("title", "title", { unique: false });
+            objectStore.createIndex("column", "column", { unique: false });
+            objectStore.createIndex("timestamp", "timestamp", { unique: false });
         };
 
         request.onsuccess = function(event) {
@@ -80,14 +129,14 @@
         };
     }
 
-    function addTask(column) {
-        const input = document.getElementById(`${column}-input`);
+    function addTask() {
+        const input = document.getElementById('task-input');
         const title = input.value.trim();
         if (title === "") return;
 
         const transaction = db.transaction("tasks", "readwrite");
         const objectStore = transaction.objectStore("tasks");
-        const task = { title, column };
+        const task = { title, column: "todo", timestamp: Date.now() };
         
         const request = objectStore.add(task);
         
@@ -135,7 +184,11 @@
         taskElement.draggable = true;
         taskElement.setAttribute('data-id', task.id);
         taskElement.setAttribute('ondragstart', 'drag(event)');
-        taskElement.textContent = task.title;
+        taskElement.innerHTML = `
+            <span>${task.title}</span>
+            <span>${new Date(task.timestamp).toLocaleString()}</span>
+            <button onclick="deleteTask(${task.id})">Delete</button>
+        `;
         return taskElement;
     }
 
@@ -147,16 +200,15 @@
         ev.dataTransfer.setData("text", ev.target.getAttribute('data-id'));
     }
 
-    function drop(ev) {
+    function drop(ev, column) {
         ev.preventDefault();
         const data = ev.dataTransfer.getData("text");
         const taskId = parseInt(data);
         const taskElement = document.querySelector(`[data-id='${taskId}']`);
         const sourceColumnId = taskElement.parentElement.id;
-        const destinationColumnId = ev.target.parentElement.id;
         
-        if (sourceColumnId !== destinationColumnId) {
-            moveTask(taskId, destinationColumnId);
+        if (sourceColumnId !== column) {
+            moveTask(taskId, column);
             ev.target.appendChild(taskElement);
         }
     }
@@ -178,6 +230,20 @@
 
         request.onerror = function(event) {
             console.error("Error getting task");
+        };
+    }
+
+    function deleteTask(taskId) {
+        const transaction = db.transaction("tasks", "readwrite");
+        const objectStore = transaction.objectStore("tasks");
+        const request = objectStore.delete(taskId);
+
+        request.onsuccess = function(event) {
+            loadTasks();
+        };
+
+        request.onerror = function(event) {
+            console.error("Error deleting task");
         };
     }
 
