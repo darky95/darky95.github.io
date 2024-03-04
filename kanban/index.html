@@ -3,42 +3,82 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Task Planner</title>
+    <title>Task Planner 2</title>
     <style>
         body {
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
         }
         #taskInput {
-            width: 70%;
+            width: calc(100% - 20px);
             padding: 10px;
-            margin: 10px;
+            margin-bottom: 10px;
+            border: none;
+            border-bottom: 2px solid #ccc;
+            font-size: 16px;
+            box-sizing: border-box;
         }
         #addBtn {
+            width: 100%;
             padding: 10px;
-            margin: 10px;
+            margin-bottom: 10px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        #addBtn:hover {
+            background-color: #0056b3;
         }
         #taskList {
             list-style-type: none;
             padding: 0;
         }
         .taskItem {
-            margin: 5px;
-            padding: 5px;
+            margin-bottom: 10px;
+            padding: 10px;
             border: 1px solid #ccc;
             border-radius: 5px;
+            background-color: #f9f9f9;
+            font-size: 16px;
+            position: relative;
         }
         .taskItem.completed {
             text-decoration: line-through;
         }
+        .deleteBtn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: none;
+            border: none;
+            color: #f00;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
-    <h1>Task Planner</h1>
-    <input type="text" id="taskInput" placeholder="Enter task...">
-    <button id="addBtn">Add Task</button>
-    <ul id="taskList"></ul>
+    <div class="container">
+        <h1>Task Planner</h1>
+        <input type="text" id="taskInput" placeholder="Enter task...">
+        <button id="addBtn">Add Task</button>
+        <ul id="taskList"></ul>
+    </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -46,21 +86,70 @@
             const addBtn = document.getElementById('addBtn');
             const taskList = document.getElementById('taskList');
 
-            addBtn.addEventListener('click', function() {
+            // Load tasks from localStorage
+            const tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+
+            // Render tasks
+            tasks.forEach(task => {
+                renderTask(task);
+            });
+
+            addBtn.addEventListener('click', addTask);
+
+            function addTask() {
                 const taskText = taskInput.value.trim();
                 if (taskText !== '') {
-                    const taskItem = document.createElement('li');
-                    taskItem.textContent = taskText;
-                    taskItem.classList.add('taskItem');
+                    const task = {
+                        id: Date.now(),
+                        text: taskText,
+                        completed: false
+                    };
 
-                    taskItem.addEventListener('click', function() {
-                        taskItem.classList.toggle('completed');
-                    });
+                    tasks.push(task);
+                    localStorage.setItem('tasks', JSON.stringify(tasks));
+                    renderTask(task);
 
-                    taskList.appendChild(taskItem);
                     taskInput.value = '';
                 }
-            });
+            }
+
+            function renderTask(task) {
+                const taskItem = document.createElement('li');
+                taskItem.textContent = task.text;
+                taskItem.classList.add('taskItem');
+                if (task.completed) {
+                    taskItem.classList.add('completed');
+                }
+
+                const deleteBtn = document.createElement('button');
+                deleteBtn.textContent = '❌';
+                deleteBtn.classList.add('deleteBtn');
+                deleteBtn.addEventListener('click', () => {
+                    deleteTask(task.id);
+                });
+
+                taskItem.appendChild(deleteBtn);
+                taskItem.addEventListener('click', () => {
+                    toggleTask(task);
+                });
+
+                taskList.appendChild(taskItem);
+            }
+
+            function toggleTask(task) {
+                task.completed = !task.completed;
+                localStorage.setItem('tasks', JSON.stringify(tasks));
+                const taskItem = document.querySelector(`[data-id="${task.id}"]`);
+                taskItem.classList.toggle('completed');
+            }
+
+            function deleteTask(id) {
+                const index = tasks.findIndex(task => task.id === id);
+                tasks.splice(index, 1);
+                localStorage.setItem('tasks', JSON.stringify(tasks));
+                const taskItem = document.querySelector(`[data-id="${id}"]`);
+                taskItem.remove();
+            }
         });
     </script>
 </body>
