@@ -1,194 +1,67 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Kanban Board v4-34</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-<style>
-    body {
-        font-family: Arial, sans-serif;
-        background-color: #f0f0f0;
-        margin: 0;
-        padding: 0;
-    }
-    .container {
-        display: flex;
-        padding: 20px;
-    }
-    .column {
-        flex: 1;
-        background-color: #fff;
-        border-radius: 5px;
-        box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
-        padding: 10px;
-        margin: 0 10px;
-    }
-    .column header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-bottom: 10px;
-    }
-    .column header h2 {
-        margin: 0;
-    }
-    .column .card {
-        background-color: #f9f9f9;
-        padding: 10px;
-        margin-bottom: 10px;
-        border-radius: 3px;
-        cursor: grab;
-        position: relative;
-    }
-    .column .card:hover {
-        box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
-    }
-    .delete-icon {
-        position: absolute;
-        bottom: 5px;
-        right: 5px;
-        color: #ccc;
-        cursor: pointer;
-    }
-    .modal {
-        display: none;
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.5);
-        justify-content: center;
-        align-items: center;
-    }
-    .modal-content {
-        background-color: #fff;
-        padding: 20px;
-        border-radius: 5px;
-    }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Planner</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        #taskInput {
+            width: 70%;
+            padding: 10px;
+            margin: 10px;
+        }
+        #addBtn {
+            padding: 10px;
+            margin: 10px;
+        }
+        #taskList {
+            list-style-type: none;
+            padding: 0;
+        }
+        .taskItem {
+            margin: 5px;
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .taskItem.completed {
+            text-decoration: line-through;
+        }
+    </style>
 </head>
 <body>
+    <h1>Task Planner</h1>
+    <input type="text" id="taskInput" placeholder="Enter task...">
+    <button id="addBtn">Add Task</button>
+    <ul id="taskList"></ul>
 
-<div class="menu">
-    <button onclick="exportTasks()">Export Tasks</button>
-    <button onclick="document.getElementById('fileInput').click()">Import Tasks</button>
-    <input type="file" id="fileInput" style="display: none;" onchange="importTasks(event)">
-</div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const taskInput = document.getElementById('taskInput');
+            const addBtn = document.getElementById('addBtn');
+            const taskList = document.getElementById('taskList');
 
-<div class="container">
-    <div class="column" id="todo" ondrop="drop(event)" ondragover="allowDrop(event)">
-        <header>
-            <h2>Todo</h2>
-            <i class="fas fa-plus" onclick="openModal('todo')"></i>
-        </header>
-    </div>
-    <div class="column" id="in-progress" ondrop="drop(event)" ondragover="allowDrop(event)">
-        <header>
-            <h2>In Progress</h2>
-            <i class="fas fa-plus" onclick="openModal('in-progress')"></i>
-        </header>
-    </div>
-    <div class="column" id="done" ondrop="drop(event)" ondragover="allowDrop(event)">
-        <header>
-            <h2>Done</h2>
-            <i class="fas fa-plus" onclick="openModal('done')"></i>
-        </header>
-    </div>
-</div>
+            addBtn.addEventListener('click', function() {
+                const taskText = taskInput.value.trim();
+                if (taskText !== '') {
+                    const taskItem = document.createElement('li');
+                    taskItem.textContent = taskText;
+                    taskItem.classList.add('taskItem');
 
-<div id="myModal" class="modal">
-    <div class="modal-content">
-        <input type="text" id="newItemText" placeholder="Enter task...">
-        <button onclick="addItem()">Save</button>
-    </div>
-</div>
+                    taskItem.addEventListener('click', function() {
+                        taskItem.classList.toggle('completed');
+                    });
 
-<script>
-    function openModal(columnId) {
-        document.getElementById('myModal').style.display = 'flex';
-        document.getElementById('myModal').dataset.columnId = columnId;
-    }
-
-    function addItem() {
-        const columnId = document.getElementById('myModal').dataset.columnId;
-        const newItemText = document.getElementById('newItemText').value;
-        if (newItemText.trim() !== '') {
-            const column = document.getElementById(columnId);
-            const newCard = document.createElement('div');
-            newCard.classList.add('card');
-            newCard.draggable = true;
-            newCard.textContent = newItemText;
-            newCard.innerHTML += '<i class="fas fa-trash-alt delete-icon" onclick="deleteItem(this)"></i>';
-            column.appendChild(newCard);
-            newCard.addEventListener('dragstart', dragStart);
-            closeModal();
-        }
-    }
-
-    function deleteItem(element) {
-        element.parentNode.remove();
-    }
-
-    function closeModal() {
-        document.getElementById('myModal').style.display = 'none';
-        document.getElementById('newItemText').value = '';
-    }
-
-    function exportTasks() {
-        const columns = document.querySelectorAll('.column');
-        const tasks = [];
-        columns.forEach(column => {
-            const columnId = column.id;
-            const columnTasks = Array.from(column.querySelectorAll('.card')).map(card => card.textContent.trim());
-            tasks.push({ columnId, columnTasks });
-        });
-        const jsonTasks = JSON.stringify(tasks);
-        const blob = new Blob([jsonTasks], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'kanban_tasks.json';
-        a.click();
-        URL.revokeObjectURL(url);
-    }
-
-    function importTasks(event) {
-        const file = event.target.files[0];
-        const reader = new FileReader();
-        reader.onload = function (e) {
-            const tasks = JSON.parse(e.target.result);
-            tasks.forEach(task => {
-                const column = document.getElementById(task.columnId);
-                task.columnTasks.forEach(taskText => {
-                    const newCard = document.createElement('div');
-                    newCard.classList.add('card');
-                    newCard.draggable = true;
-                    newCard.textContent = taskText;
-                    newCard.innerHTML += '<i class="fas fa-trash-alt delete-icon" onclick="deleteItem(this)"></i>';
-                    column.appendChild(newCard);
-                    newCard.addEventListener('dragstart', dragStart);
-                });
+                    taskList.appendChild(taskItem);
+                    taskInput.value = '';
+                }
             });
-        };
-        reader.readAsText(file);
-    }
-
-    function allowDrop(event) {
-        event.preventDefault();
-    }
-
-    function dragStart(event) {
-        event.dataTransfer.setData("text/plain", event.target.id);
-    }
-
-    function drop(event) {
-        event.preventDefault();
-        const data = event.dataTransfer.getData("text/plain");
-        event.target.appendChild(document.getElementById(data));
-    }
-</script>
-
+        });
+    </script>
 </body>
 </html>
