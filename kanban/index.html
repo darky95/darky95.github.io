@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Task Planner 2</title>
+    <title>Task Planner 3</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -85,32 +85,61 @@
             const taskInput = document.getElementById('taskInput');
             const addBtn = document.getElementById('addBtn');
             const taskList = document.getElementById('taskList');
+            let db;
 
-            // Load tasks from localStorage
-            const tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+            // Open IndexedDB database
+            const request = window.indexedDB.open('tasksDB', 1);
 
-            // Render tasks
-            tasks.forEach(task => {
-                renderTask(task);
-            });
+            request.onerror = function(event) {
+                console.error('Database error:', event.target.errorCode);
+            };
+
+            request.onsuccess = function(event) {
+                console.log('Database opened successfully');
+                db = event.target.result;
+                renderTasks();
+            };
+
+            request.onupgradeneeded = function(event) {
+                console.log('Database upgrade needed');
+                const db = event.target.result;
+                const objectStore = db.createObjectStore('tasks', { keyPath: 'id' });
+                objectStore.createIndex('completed', 'completed', { unique: false });
+            };
 
             addBtn.addEventListener('click', addTask);
 
             function addTask() {
                 const taskText = taskInput.value.trim();
                 if (taskText !== '') {
+                    const transaction = db.transaction(['tasks'], 'readwrite');
+                    const objectStore = transaction.objectStore('tasks');
                     const task = {
                         id: Date.now(),
                         text: taskText,
                         completed: false
                     };
-
-                    tasks.push(task);
-                    localStorage.setItem('tasks', JSON.stringify(tasks));
-                    renderTask(task);
-
+                    const request = objectStore.add(task);
+                    request.onsuccess = function(event) {
+                        console.log('Task added successfully');
+                        renderTask(task);
+                    };
                     taskInput.value = '';
                 }
+            }
+
+            function renderTasks() {
+                taskList.innerHTML = '';
+                const transaction = db.transaction(['tasks'], 'readonly');
+                const objectStore = transaction.objectStore('tasks');
+                const request = objectStore.openCursor();
+                request.onsuccess = function(event) {
+                    const cursor = event.target.result;
+                    if (cursor) {
+                        renderTask(cursor.value);
+                        cursor.continue();
+                    }
+                };
             }
 
             function renderTask(task) {
@@ -137,18 +166,27 @@
             }
 
             function toggleTask(task) {
-                task.completed = !task.completed;
-                localStorage.setItem('tasks', JSON.stringify(tasks));
-                const taskItem = document.querySelector(`[data-id="${task.id}"]`);
-                taskItem.classList.toggle('completed');
+                const transaction = db.transaction(['tasks'], 'readwrite');
+                const objectStore = transaction.objectStore('tasks');
+                const request = objectStore.get(task.id);
+                request.onsuccess = function(event) {
+                    const updatedTask = event.target.result;
+                    updatedTask.completed = !updatedTask.completed;
+                    const updateRequest = objectStore.put(updatedTask);
+                    updateRequest.onsuccess = function() {
+                        renderTasks();
+                    };
+                };
             }
 
             function deleteTask(id) {
-                const index = tasks.findIndex(task => task.id === id);
-                tasks.splice(index, 1);
-                localStorage.setItem('tasks', JSON.stringify(tasks));
-                const taskItem = document.querySelector(`[data-id="${id}"]`);
-                taskItem.remove();
+                const transaction = db.transaction(['tasks'], 'readwrite');
+                const objectStore = transaction.objectStore('tasks');
+                const request = objectStore.delete(id);
+                request.onsuccess = function(event) {
+                    console.log('Task deleted successfully');
+                    renderTasks();
+                };
             }
         });
     </script>
