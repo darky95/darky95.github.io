@@ -14,8 +14,15 @@
     }
     .container {
         display: flex;
-        justify-content: space-around;
+        flex-direction: column;
+        align-items: center;
         padding: 20px;
+    }
+    .menu {
+        display: flex;
+        justify-content: space-between;
+        width: 100%;
+        margin-bottom: 20px;
     }
     .column {
         background-color: #fff;
@@ -23,6 +30,8 @@
         box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
         width: 300px;
         padding: 10px;
+        margin-bottom: 20px;
+        position: relative;
     }
     .column header {
         display: flex;
@@ -46,14 +55,36 @@
     }
     .delete-icon {
         position: absolute;
-        top: 5px;
+        bottom: 5px;
         right: 5px;
         color: #ccc;
         cursor: pointer;
     }
+    .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        justify-content: center;
+        align-items: center;
+    }
+    .modal-content {
+        background-color: #fff;
+        padding: 20px;
+        border-radius: 5px;
+    }
 </style>
 </head>
 <body>
+
+<div class="menu">
+    <button onclick="exportTasks()">Export Tasks</button>
+    <button onclick="document.getElementById('fileInput').click()">Import Tasks</button>
+    <input type="file" id="fileInput" style="display: none;" onchange="importTasks(event)">
+</div>
 
 <div class="container">
     <div class="column" id="todo">
@@ -149,6 +180,44 @@
     function closeModal() {
         document.getElementById('myModal').style.display = 'none';
         document.getElementById('newItemText').value = '';
+    }
+
+    function exportTasks() {
+        const columns = document.querySelectorAll('.column');
+        const tasks = [];
+        columns.forEach(column => {
+            const columnId = column.id;
+            const columnTasks = Array.from(column.querySelectorAll('.card')).map(card => card.textContent.trim());
+            tasks.push({ columnId, columnTasks });
+        });
+        const jsonTasks = JSON.stringify(tasks);
+        const blob = new Blob([jsonTasks], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'kanban_tasks.json';
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+
+    function importTasks(event) {
+        const file = event.target.files[0];
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            const tasks = JSON.parse(e.target.result);
+            tasks.forEach(task => {
+                const column = document.getElementById(task.columnId);
+                task.columnTasks.forEach(taskText => {
+                    const newCard = document.createElement('div');
+                    newCard.classList.add('card');
+                    newCard.draggable = true;
+                    newCard.textContent = taskText;
+                    newCard.innerHTML += '<i class="fas fa-trash-alt delete-icon" onclick="deleteItem(this)"></i>';
+                    column.appendChild(newCard);
+                });
+            });
+        };
+        reader.readAsText(file);
     }
 </script>
 
