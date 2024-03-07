@@ -50,7 +50,7 @@
         background-color: #f1f3f5;
         border: 1px solid #ced4da;
         border-radius: 5px;
-        padding: 10px;
+        padding: 10px 10px 20px;
         margin: 5px 0;
         cursor: pointer;
         display: flex;
@@ -61,17 +61,17 @@
 
     .task span {
         flex-grow: 1;
+		
     }
 
     .task-timestamp {
-        font-size: 0.5rem;
+        font-size: 0.8rem;
         color: #6c757d;
         position: absolute;
         bottom: 2px;
         left: 10px;
-		
     }
-
+	
     .task button {
         background-color: #dc3545;
         color: #fff;
@@ -109,8 +109,10 @@
 <body>
 <div class="input-container">
     <input type="text" id="task-input" placeholder="Aufgabe eingeben ..." onkeypress="handleKeyPress(event)">
+    <input type="text" id="person-input" placeholder="Beteiligte Person eingeben ..." onkeypress="handleKeyPress(event)">
     <button onclick="addTask()">Hinzufügen</button>
 </div>
+
 
 <div class="board-container">
     <div class="board">
@@ -163,26 +165,31 @@
         };
     }
 
-    function addTask() {
-        const input = document.getElementById('task-input');
-        const title = input.value.trim();
-        if (title === "") return;
-
-        const transaction = db.transaction("tasks", "readwrite");
-        const objectStore = transaction.objectStore("tasks");
-        const task = { title, column: "open", timestamp: Date.now() };
-        
-        const request = objectStore.add(task);
-        
-        request.onsuccess = function(event) {
-            loadTasks();
-            input.value = "";
-        };
-
-        request.onerror = function(event) {
-            console.error("Error adding task");
-        };
-    }
+	function addTask() {
+		const taskInput = document.getElementById('task-input');
+		const personInput = document.getElementById('person-input');
+		const title = taskInput.value.trim();
+		const person = personInput.value.trim(); // Neuer Teil: Beteiligte Person
+	
+		if (title === "") return;
+	
+		const transaction = db.transaction("tasks", "readwrite");
+		const objectStore = transaction.objectStore("tasks");
+		const task = { title, person, column: "open", timestamp: Date.now() }; // Neuer Teil: Beteiligte Person
+		
+		const request = objectStore.add(task);
+		
+		request.onsuccess = function(event) {
+			loadTasks();
+			taskInput.value = "";
+			personInput.value = ""; // Leeren Sie das Eingabefeld für die beteiligte Person nach dem Hinzufügen einer Aufgabe
+		};
+	
+		request.onerror = function(event) {
+			console.error("Error adding task");
+		};
+	}
+	
 
     function loadTasks() {
         const transaction = db.transaction("tasks", "readonly");
@@ -226,11 +233,11 @@
         taskElement.draggable = true;
         taskElement.setAttribute('data-id', task.id);
         taskElement.setAttribute('ondragstart', 'drag(event)');
-        taskElement.innerHTML = `
-            <span>${task.title}</span>
-            <span class="task-timestamp">${new Date(task.timestamp).toLocaleString()}</span>
-            <button onclick="deleteTask(${task.id})">löschen</button>
-        `;
+		taskElement.innerHTML = `
+			<span>${task.title}</span>
+			<span class="task-timestamp">${new Date(task.timestamp).toLocaleString()} ${task.person ? ' // Beteiligt: ' + task.person : ''}</span>
+			<button onclick="deleteTask(${task.id})">löschen</button>
+    `;
         return taskElement;
     }
 
