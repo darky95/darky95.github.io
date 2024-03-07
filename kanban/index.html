@@ -73,7 +73,7 @@
     }
 	
     .task button {
-        background-color: #dc3545;
+        background-color: #f1f3f5;
         color: #fff;
         border: none;
         border-radius: 3px;
@@ -236,7 +236,7 @@
 		taskElement.innerHTML = `
 			<span>${task.title}</span>
 			<span class="task-timestamp">${new Date(task.timestamp).toLocaleString()} ${task.person ? ' // Beteiligt: ' + task.person : ''}</span>
-			<button onclick="deleteTask(${task.id})">löschen</button>
+			<button onclick="deleteTask(${task.id})">❌</button>
     `;
         return taskElement;
     }
