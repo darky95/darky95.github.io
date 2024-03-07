@@ -21,12 +21,11 @@
 
     .board {
         display: flex;
-        /* Änderung: Alle Spalten nebeneinander anzeigen */
-        flex-direction: row;
+        flex-wrap: wrap;
     }
 
     .column {
-        flex: 1;
+        flex-basis: calc(20% - 10px);
         border: 1px solid #dee2e6;
         border-radius: 5px;
         margin: 10px;
